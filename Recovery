@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# Simulate processes and resources
+declare -A resources
+resources=( ["R1"]=1 ["R2"]=1 )
+
+# Simulate processes holding resources
+declare -A processes
+processes=( ["P1"]="R1" ["P2"]="R2" )
+
+# Function to detect deadlock
+detect_deadlock() {
+    if [[ ${processes["P1"]} == "R1" && ${processes["P2"]} == "R2" ]]; then
+        echo "Deadlock detected!"
+        return 1
+    else
+        echo "No deadlock."
+        return 0
+    fi
+}
+
+# Function to recover from deadlock by process termination
+terminate_process() {
+    echo "Terminating process P1..."
+    unset processes["P1"]
+    resources["R1"]=1
+    echo "Process P1 terminated. Resource R1 released."
+}
+
+# Function to recover from deadlock by resource preemption
+preempt_resource() {
+    echo "Preempting resource R2 from process P2..."
+    processes["P2"]=""
+    resources["R2"]=1
+    echo "Resource R2 preempted from process P2."
+}
+
+# Function to recover from deadlock by rollback
+rollback_process() {
+    echo "Rolling back process P2..."
+    processes["P2"]="R1"
+    resources["R1"]=0
+    echo "Process P2 rolled back to use resource R1."
+}
+
+# Simulate deadlock detection and recovery
+detect_deadlock
+if [[ $? -eq 1 ]]; then
+    echo "Recovering from deadlock using process termination..."
+    terminate_process
+    detect_deadlock
+fi
+
+# Simulate another deadlock scenario
+processes["P1"]="R1"
+processes["P2"]="R2"
+detect_deadlock
+if [[ $? -eq 1 ]]; then
+    echo "Recovering from deadlock using resource preemption..."
+    preempt_resource
+    detect_deadlock
+fi
+
+# Simulate another deadlock scenario
+processes["P1"]="R1"
+processes["P2"]="R2"
+detect_deadlock
+if [[ $? -eq 1 ]]; then
+    echo "Recovering from deadlock using rollback..."
+    rollback_process
+    detect_deadlock
+fi
