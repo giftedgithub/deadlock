@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Initialize resources
+declare -A resources
+resources=( ["R1"]=1 ["R2"]=1 )
+
+# Initialize processes with priorities
+declare -A processes
+processes=( ["P1"]="R1" ["P2"]="R2" )
+declare -A priorities
+priorities=( ["P1"]=10 ["P2"]=5 )  # Higher value means higher priority
+
+# Function to print the status of processes and resources
+print_status() {
+    echo "Current Status:"
+    for process in "${!processes[@]}"; do
+        echo "Process $process (Priority ${priorities[$process]}) is holding resource ${processes[$process]}"
+    done
+    for resource in "${!resources[@]}"; do
+        echo "Resource $resource is available: ${resources[$resource]}"
+    done
+    echo ""
+}
+
+# Detect and handle deadlock based on priority
+detect_and_handle_deadlock() {
+    print_status
+    if [[ ${processes["P1"]} == "R1" && ${processes["P2"]} == "R2" ]]; then
+        echo "Deadlock detected!"
+        if [[ ${priorities["P1"]} -gt ${priorities["P2"]} ]]; then
+            echo "Terminating process P2 (lower priority)..."
+            unset processes["P2"]
+            resources["R2"]=1
+        else
+            echo "Terminating process P1 (lower priority)..."
+            unset processes["P1"]
+            resources["R1"]=1
+        fi
+        echo "Deadlock resolved."
+    else
+        echo "No deadlock."
+    fi
+    echo ""
+}
+
+# Simulate deadlock detection and resolution
+echo "Simulating priority-based deadlock handling..."
+detect_and_handle_deadlock
