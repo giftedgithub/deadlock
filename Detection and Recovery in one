@@ -1,0 +1,115 @@
+#!/bin/bash
+
+# Simulate processes and resources
+declare -A resources
+resources=( ["R1"]=1 ["R2"]=1 ["R3"]=1 ["R4"]=1 )
+
+# Simulate processes holding resources
+declare -A processes
+processes=( ["P1"]="R1" ["P2"]="R2" ["P3"]="R3" ["P4"]="R4" )
+
+# Function to print the status of processes and resources
+print_status() {
+    echo "Current Status:"
+    for process in "${!processes[@]}"; do
+        echo "Process $process is holding resource ${processes[$process]}"
+    done
+    for resource in "${!resources[@]}"; do
+        echo "Resource $resource is available: ${resources[$resource]}"
+    done
+    echo ""
+}
+
+# Function to detect deadlock using Resource Allocation Graph (RAG)
+detect_and_recover_rag() {
+    echo "Detecting deadlock using Resource Allocation Graph (RAG)..."
+    print_status
+    if [[ ${processes["P1"]} == "R1" && ${processes["P2"]} == "R2" && ${processes["P3"]} == "R3" && ${processes["P4"]} == "R4" ]]; then
+        echo "Deadlock detected in RAG!"
+        echo "Process P1 is holding resource R1 and waiting for resource R2."
+        echo "Process P2 is holding resource R2 and waiting for resource R3."
+        echo "Process P3 is holding resource R3 and waiting for resource R4."
+        echo "Process P4 is holding resource R4 and waiting for resource R1."
+        echo "Recovering from deadlock by terminating process P1..."
+        unset processes["P1"]
+        resources["R1"]=1
+        echo "Process P1 terminated. Resource R1 released."
+    else
+        echo "No deadlock in RAG."
+    fi
+    echo ""
+}
+
+# Function to detect deadlock using Wait-For Graph (WFG)
+detect_and_recover_wfg() {
+    echo "Detecting deadlock using Wait-For Graph (WFG)..."
+    print_status
+    if [[ ${processes["P1"]} == "R1" && ${processes["P2"]} == "R2" && ${processes["P3"]} == "R1" ]]; then
+        echo "Deadlock detected in WFG!"
+        echo "Process P1 is holding resource R1 and waiting for resource R2."
+        echo "Process P2 is holding resource R2 and waiting for resource R1."
+        echo "Process P3 is holding resource R1 and waiting for resource R2."
+        echo "Recovering from deadlock by preempting resource R2 from process P2..."
+        processes["P2"]=""
+        resources["R2"]=1
+        echo "Resource R2 preempted from process P2."
+    else
+        echo "No deadlock in WFG."
+    fi
+    echo ""
+}
+
+# Function to detect deadlock using Banker's Algorithm
+detect_and_recover_banker() {
+    echo "Detecting deadlock using Banker's Algorithm..."
+    print_status
+    safe_state=true
+    for process in "${!processes[@]}"; do
+        if [[ ${resources[${processes[$process]}]} -eq 0 ]]; then
+            safe_state=false
+            break
+        fi
+    done
+    if [[ $safe_state == false ]]; then
+        echo "Deadlock detected by Banker's Algorithm!"
+        echo "Process P1 is holding resource R1 and waiting for resource R2."
+        echo "Process P2 is holding resource R2 and waiting for resource R3."
+        echo "Process P3 is holding resource R3 and waiting for resource R4."
+        echo "Process P4 is holding resource R4 and waiting for resource R1."
+        echo "Recovering from deadlock by rolling back process P4..."
+        processes["P4"]="R3"
+        resources["R4"]=1
+        echo "Process P4 rolled back to use resource R3. Resource R4 released."
+    else
+        echo "No deadlock detected by Banker's Algorithm."
+    fi
+    echo ""
+}
+
+# Function to detect deadlock using periodic checks
+detect_and_recover_periodic() {
+    echo "Detecting deadlock using periodic checks..."
+    print_status
+    if [[ ${processes["P1"]} == "R1" && ${processes["P2"]} == "R2" && ${processes["P3"]} == "R3" && ${processes["P4"]} == "R4" ]]; then
+        echo "Deadlock detected in periodic check!"
+        echo "Process P1 is holding resource R1 and waiting for resource R2."
+        echo "Process P2 is holding resource R2 and waiting for resource R3."
+        echo "Process P3 is holding resource R3 and waiting for resource R4."
+        echo "Process P4 is holding resource R4 and waiting for resource R1."
+        echo "Recovering from deadlock by terminating process P3..."
+        unset processes["P3"]
+        resources["R3"]=1
+        echo "Process P3 terminated. Resource R3 released."
+    else
+        echo "No deadlock in periodic check."
+    fi
+    echo ""
+}
+
+# Simulate deadlock detection and recovery using all techniques
+echo "Simulating deadlock detection and recovery..."
+detect_and_recover_rag
+detect_and_recover_wfg
+detect_and_recover_banker
+detect_and_recover_periodic
+l
